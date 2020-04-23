@@ -1,0 +1,201 @@
+/* Copyright (c) 2018-2019, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include "sm6150.dtsi"
+#include "sa6155-pmic.dtsi"
+#include "sa6155-display.dtsi"
+
+#include "sm6150-camera-sensor-adp.dtsi"
+/ {
+	model = "Qualcomm Technologies, Inc. SA6155P";
+	qcom,msm-name = "SA6155P";
+	qcom,msm-id = <377 0>, <380 0>;
+
+	aliases {
+		pci-domain0 = &pcie0; /* PCIe0 domain */
+	};
+};
+
+/* Delete second instance of pm6155 definitions for APQ version */
+&spmi_bus {
+	/delete-node/ qcom,pm6155@4;
+	/delete-node/ qcom,pm6155@5;
+};
+
+&soc {
+	/delete-node/ rpmh-regulator-modemlvl;
+	/delete-node/ rpmh-regulator-ldoc2;
+	/delete-node/ rpmh-regulator-ldoc3;
+	/delete-node/ rpmh-regulator-ldoc4;
+	/delete-node/ rpmh-regulator-ldoc13;
+	/delete-node/ rpmh-regulator-ldoc14;
+	/delete-node/ rpmh-regulator-ldoc16;
+	/delete-node/ rpmh-regulator-ldoc17;
+	/delete-node/ rpmh-regulator-ldoc18;
+	/delete-node/ bt_wcn3990;
+
+	bluetooth_ext: bt_qca6174 {
+		compatible = "qca,qca6174";
+		/* BT_EN */
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_en_active>;
+		qca,bt-reset-gpio = <&tlmm 85 0>;
+		/* PWR_CTR1_VDD_PA */
+		qca,bt-vdd-pa-supply = <&vreg_conn_pa>;
+		qca,bt-chip-pwd-supply = <&vreg_conn_1p8>;
+		qca,bt-vdd-vm-supply = <&pm6155_1_s6>;
+		qca,bt-vdd-5a-supply = <&pm6155_1_s5>;
+		qca,bt-vdd-vh-supply = <&pm6155_1_l15>;
+
+		qca,bt-vdd-vm-voltage-level = <1370000 1370000>;
+		qca,bt-vdd-5a-voltage-level = <2040000 2040000>;
+		qca,bt-vdd-vh-voltage-level = <1904000 1904000>;
+
+		qca,bt-vdd-vm-current-level = <0>;
+		qca,bt-vdd-5a-current-level = <0>;
+		qca,bt-vdd-vh-current-level = <450000>;
+
+		status = "disabled";
+	};
+
+	cnss_pcie: qcom,cnss {
+		compatible = "qcom,cnss";
+		wlan-en-gpio = <&tlmm 98 0>;
+		vdd-wlan-supply = <&vreg_wlan>;
+		vdd-wlan-io-supply = <&pm6155_1_s4>;
+		vdd-wlan-ctrl1-supply = <&vreg_conn_pa>;
+		vdd-wlan-ctrl2-supply = <&vreg_conn_1p8>;
+		reg = <0x10000000 0x10000000>,
+			<0x20000000 0x10000>;
+		reg-names = "smmu_iova_base", "smmu_iova_ipa";
+		qcom,smmu-s1-enable;
+		qcom,notify-modem-status;
+		pinctrl-names = "wlan_en_active", "wlan_en_sleep";
+		pinctrl-0 = <&cnss_wlan_en_active>;
+		pinctrl-1 = <&cnss_wlan_en_sleep>;
+		qcom,wlan-rc-num = <0>;
+		qcom,wlan-ramdump-dynamic = <0x200000>;
+
+		qcom,msm-bus,name = "msm-cnss";
+		qcom,msm-bus,num-cases = <4>;
+		qcom,msm-bus,num-paths = <2>;
+		qcom,msm-bus,vectors-KBps =
+				<45 512 0 0>, <1 512 0 0>,
+				/* Upto 200 Mbps */
+				<45 512 41421 655360>, <1 512 41421 655360>,
+				/* Upto 400 Mbps */
+				<45 512 98572 655360>, <1 512 98572 1600000>,
+				/* Upto 800 Mbps */
+				<45 512 207108 1146880>, <1 512 207108 3124992>;
+	};
+
+	qcom,rmnet-ipa {
+		status="disabled";
+	};
+	qfprom: qfprom@780130 {
+		compatible = "qcom,qfprom";
+		reg = <0x00780130 0x4>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		read-only;
+		ranges;
+	};
+};
+
+&ipa_hw {
+	status="disabled";
+};
+
+&pil_modem {
+	/delete-property/ vdd_mss-supply;
+};
+
+&qusb_phy0 {
+	vdd-supply = <&L5A>;
+	vdda18-supply = <&L12A>;
+	vdda33-supply = <&L13A>;
+};
+
+&tpdm_west {
+	status = "disabled";
+};
+
+&usb_qmp_phy {
+	vdd-supply = <&L5A>;
+	core-supply = <&L12A>;
+};
+
+&qusb_phy1 {
+	vdd-supply = <&L5A>;
+	vdda18-supply = <&L12A>;
+	vdda33-supply = <&L13A>;
+};
+
+&mdss_dsi0_pll {
+	/delete-property/ qcom,dsi-pll-ssc-en;
+};
+
+&slpi_tlmm {
+	status = "ok";
+};
+
+&clock_gcc {
+	compatible = "qcom,gcc-sa6155", "syscon";
+};
+
+&clock_videocc {
+	compatible = "qcom,videocc-sa6155", "syscon";
+};
+
+&clock_dispcc {
+	compatible = "qcom,dispcc-sa6155", "syscon";
+};
+
+&clock_scc {
+	compatible = "qcom,scc-sa6155", "syscon";
+	vdd_scc_cx-supply = <&VDD_CX_LEVEL>;
+	status = "ok";
+};
+
+&clock_camcc {
+	compatible = "qcom,camcc-sa6155", "syscon";
+	vdd_mx-supply = <&VDD_CX_LEVEL>;
+};
+
+&clock_gpucc {
+	compatible = "qcom,gpucc-sa6155", "syscon";
+	vdd_mx-supply = <&VDD_CX_LEVEL>;
+};
+
+&thermal_zones {
+	lmh-dcvs-00 {
+		trips {
+			active-config {
+				temperature = <105000>;
+				hysteresis = <40000>;
+			};
+		};
+	};
+
+	lmh-dcvs-01 {
+		trips {
+			active-config {
+				temperature = <105000>;
+				hysteresis = <40000>;
+			};
+		};
+	};
+};
+
+/* Audio device tree */
+#include "sa6155-audio.dtsi"
+#include "sa6155-pcie.dtsi"
